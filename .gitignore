@@ -1,0 +1,22 @@
+backend/.venv/
+backend/storage/
+frontend/node_modules/
+frontend/dist/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.DS_Store
+*.log
+.vscode/
+.idea/
+.env
+.env.*
+!.env.example
+*.pt
+BRD for Atlético Intelligence — AI-Powered Soccer Incident Review Platform.pdf
+BRD.txt
+Interview Wireframes.pdf
+Wireframes.txt
+deployment guide.md
+SKILL.md

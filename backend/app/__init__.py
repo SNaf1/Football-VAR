@@ -1,0 +1,1 @@
+"""Atlético Intelligence backend package."""
