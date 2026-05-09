@@ -50,7 +50,6 @@ This project was built as a technical demo around a simple operator flow:
 frontend/   React client
 backend/    FastAPI service and review pipeline
 assets/     Bundled sample clips for the demo
-docs/       Notes and working documents
 ```
 
 ## Local development
