@@ -132,7 +132,7 @@ select {
 }
 
 .login-hero__field::after {
-  left: 68%;
+  left: 71.5%;
   top: 16%;
   bottom: 16%;
   width: 0;
@@ -144,8 +144,19 @@ select {
   height: 2.7rem;
   border-radius: 999px;
   background:
-    radial-gradient(circle at 35% 30%, #ffffff 0, #f2f6fb 52%, #dde7f3 76%, #ccd8e6 100%),
-    repeating-conic-gradient(from 18deg, transparent 0deg 36deg, rgba(9, 18, 31, 0.18) 36deg 44deg);
+    radial-gradient(circle at 35% 30%, #ffffff 0, #eef4fb 52%, #dce5f0 76%, #ccd6e2 100%),
+    conic-gradient(
+      from 20deg,
+      rgba(9, 18, 31, 0.95) 0deg 22deg,
+      transparent 22deg 64deg,
+      rgba(9, 18, 31, 0.95) 64deg 92deg,
+      transparent 92deg 150deg,
+      rgba(9, 18, 31, 0.95) 150deg 182deg,
+      transparent 182deg 236deg,
+      rgba(9, 18, 31, 0.95) 236deg 264deg,
+      transparent 264deg 322deg,
+      rgba(9, 18, 31, 0.95) 322deg 360deg
+    );
   box-shadow:
     0 0 0 6px rgba(73, 211, 145, 0.16),
     0 18px 28px rgba(0, 0, 0, 0.3);
@@ -164,7 +175,7 @@ select {
   position: absolute;
   top: 16%;
   bottom: 16%;
-  left: 69%;
+  left: 71%;
   width: 3px;
   background: linear-gradient(180deg, rgba(104, 208, 255, 0.08), rgba(104, 208, 255, 0.98), rgba(104, 208, 255, 0.08));
   box-shadow: 0 0 16px rgba(104, 208, 255, 0.2);
@@ -172,12 +183,13 @@ select {
 
 .login-hero__goal-frame {
   position: absolute;
-  left: 73%;
-  top: 28%;
-  width: 11%;
-  height: 42%;
+  left: 74%;
+  top: 24%;
+  width: 11.5%;
+  height: 50%;
   border-top: 3px solid rgba(241, 247, 255, 0.9);
   border-right: 3px solid rgba(241, 247, 255, 0.9);
+  border-bottom: 3px solid rgba(241, 247, 255, 0.75);
 }
 
 .login-hero__goal-frame::before,
@@ -216,16 +228,6 @@ select {
   background: radial-gradient(circle, rgba(5, 11, 18, 0.48) 0, rgba(5, 11, 18, 0.08) 72%, transparent 100%);
 }
 
-.login-hero__shot-trail {
-  position: absolute;
-  left: 24%;
-  top: 57%;
-  height: 2px;
-  width: 44%;
-  transform-origin: left center;
-  background: linear-gradient(90deg, rgba(73, 211, 145, 0) 0%, rgba(73, 211, 145, 0.7) 52%, rgba(104, 208, 255, 0.88) 100%);
-}
-
 .login-hero__ticker {
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(255, 255, 255, 0.04);
@@ -236,6 +238,21 @@ select {
   width: max-content;
   gap: 1.35rem;
   white-space: nowrap;
+}
+
+.tutorial-step {
+  display: grid;
+  grid-template-columns: 3.4rem minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.tutorial-step__index {
+  display: grid;
+  place-items: center;
+  min-height: 3.4rem;
+  border: 1px solid rgba(104, 208, 255, 0.18);
+  background: rgba(104, 208, 255, 0.08);
 }
 
 .muted-copy {

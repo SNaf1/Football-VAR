@@ -335,38 +335,46 @@ function LoginPage({
               <span className="review-badge text-emerald-100/88">Line Projection</span>
               <span className="review-badge text-amber-100/88">Incident Archive</span>
             </div>
-            <div className="mt-8 flex flex-wrap gap-3">
+            <div className="mt-10 flex justify-center xl:justify-start">
               <button
-                className={clsx(buttonStyles, 'bg-slate-50 px-5 text-slate-950 hover:bg-slate-100')}
+                className={clsx(buttonStyles, 'min-w-[17rem] bg-slate-50 px-8 py-4 text-lg text-slate-950 hover:bg-slate-100')}
                 type="button"
                 onClick={() => setLoginOpen(true)}
               >
                 Demo Login
               </button>
-              <span className="muted-copy self-center text-sm">Open the review console in a modal and choose your role.</span>
             </div>
+            <p className="muted-copy mt-4 text-center text-sm xl:text-left">Open the review console in a modal and choose your role.</p>
           </div>
           <div className="xl:justify-self-end">
             <FootballHeroGraphic />
           </div>
         </div>
 
-        <div className="mt-10 grid gap-4 lg:grid-cols-3">
-          <TutorialStep
-            index="01"
-            title="Create the match"
-            body="Set the fixture name, kickoff, and operator role before any clip is loaded."
-          />
-          <TutorialStep
-            index="02"
-            title="Load and lock the moment"
-            body="Upload a clip or pick a sample, then trim the incident and scrub to the pass or goal frame."
-          />
-          <TutorialStep
-            index="03"
-            title="Review and archive"
-            body="Check the line, add a referee note, and log the incident for the viewer archive."
-          />
+        <div className="mt-10 panel-cut bg-white/[0.02] p-5 md:p-6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="max-w-[24rem]">
+              <p className="display-face text-[0.72rem] uppercase tracking-[0.3em] text-sky-100/70">How It Works</p>
+              <h3 className="surface-heading mt-3 text-[2.1rem] font-semibold text-slate-50">Three steps from clip to verdict</h3>
+            </div>
+            <div className="flex-1 space-y-4">
+              <TutorialStep
+                index="01"
+                title="Create the match"
+                body="Set the fixture name, kickoff, and operator role before any clip is loaded."
+              />
+              <TutorialStep
+                index="02"
+                title="Load and lock the moment"
+                body="Upload a clip or pick a sample, then trim the incident and scrub to the pass or goal frame."
+              />
+              <TutorialStep
+                index="03"
+                title="Review and archive"
+                body="Check the line, add a referee note, and log the incident for the viewer archive."
+              />
+            </div>
+          </div>
         </div>
       </motion.section>
 
@@ -1597,10 +1605,14 @@ function FootballMark({ className }: { className?: string }) {
 
 function TutorialStep({ index, title, body }: { index: string; title: string; body: string }) {
   return (
-    <div className="panel-cut bg-white/[0.02] p-4">
-      <p className="display-face text-[0.66rem] uppercase tracking-[0.28em] text-emerald-200/78">{index}</p>
-      <h3 className="surface-heading mt-3 text-[1.55rem] font-semibold text-slate-50">{title}</h3>
-      <p className="muted-copy mt-3 text-sm leading-6">{body}</p>
+    <div className="tutorial-step panel-cut bg-white/[0.02] p-4">
+      <div className="tutorial-step__index">
+        <span className="display-face text-[0.66rem] uppercase tracking-[0.28em] text-emerald-200/88">{index}</span>
+      </div>
+      <div className="min-w-0">
+        <h3 className="surface-heading text-[1.35rem] font-semibold text-slate-50">{title}</h3>
+        <p className="muted-copy mt-2 text-sm leading-6">{body}</p>
+      </div>
     </div>
   )
 }
@@ -1623,11 +1635,6 @@ function FootballHeroGraphic() {
         <motion.div
           className="login-hero__ball-shadow"
           animate={{ x: [0, 84, 150, 226], scaleX: [1, 0.9, 0.84, 0.72], opacity: [0.24, 0.18, 0.14, 0.08] }}
-          transition={{ duration: 5.4, repeat: Infinity, ease: 'easeInOut' }}
-        />
-        <motion.div
-          className="login-hero__shot-trail"
-          animate={{ scaleX: [0.12, 0.64, 1, 0.3], opacity: [0.16, 0.78, 0.92, 0.18] }}
           transition={{ duration: 5.4, repeat: Infinity, ease: 'easeInOut' }}
         />
         <div className="absolute bottom-5 left-5 right-5 flex items-end justify-between text-xs uppercase tracking-[0.22em] text-slate-300/78">
