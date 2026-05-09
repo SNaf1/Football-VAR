@@ -6,6 +6,7 @@ from typing import Any, Literal
 from pydantic import BaseModel, Field
 
 
+# These literals keep the API contract narrow and predictable for the frontend.
 Role = Literal["Match Official", "Team Viewer"]
 ReviewType = Literal["offside", "goal"]
 ReviewStatus = Literal["pending_frame_lock", "processing", "reviewed"]
@@ -13,6 +14,7 @@ Verdict = Literal["Offside", "Onside", "Goal", "No Goal", "Human Review"]
 AttackDirection = Literal["left", "right"]
 
 
+# Demo auth is intentionally lightweight; this is just enough to drive role-based UI states.
 class DemoLoginRequest(BaseModel):
     role: Role
     display_name: str = Field(min_length=2, max_length=60)
@@ -27,6 +29,7 @@ class DemoLoginResponse(BaseModel):
     created_at: datetime
 
 
+# Match metadata is stored separately from video assets so one source clip can back a fixture.
 class MatchCreateRequest(BaseModel):
     title: str = Field(min_length=2, max_length=120)
     home_team: str = Field(min_length=2, max_length=60)
@@ -59,6 +62,7 @@ class VideoAssetResponse(BaseModel):
     created_at: datetime
 
 
+# A review clip is the short working window generated from the longer source feed.
 class ReviewClipRequest(BaseModel):
     video_id: str
     review_type: ReviewType
@@ -86,6 +90,7 @@ class GoalReviewRequest(BaseModel):
     incident_id: str
 
 
+# Suggestions are simple labels used by the UI when a review result needs operator context.
 class DetectionSuggestion(BaseModel):
     id: str
     label: str
@@ -94,6 +99,7 @@ class DetectionSuggestion(BaseModel):
     bbox: list[float]
 
 
+# Player candidates are richer because manual offside correction needs feet and pitch context.
 class PlayerCandidate(BaseModel):
     id: str
     team: str | None = None
@@ -104,6 +110,7 @@ class PlayerCandidate(BaseModel):
     on_pitch: bool | None = None
 
 
+# This is the main record the frontend works with after a review starts.
 class IncidentResponse(BaseModel):
     id: str
     match_id: str | None = None
@@ -133,10 +140,12 @@ class IncidentResponse(BaseModel):
     updated_at: datetime
 
 
+# Notes are optional, but bounded so they stay short and readable in the incident archive.
 class IncidentNoteRequest(BaseModel):
     note: str = Field(min_length=0, max_length=300)
 
 
+# Manual offside correction can use detected player ids, manually planted points, or both.
 class OffsideCorrectionRequest(BaseModel):
     attacker_id: str | None = None
     defender_id: str | None = None

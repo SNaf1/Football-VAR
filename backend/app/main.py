@@ -42,6 +42,7 @@ settings = get_settings()
 storage = JsonStorage(settings)
 
 app = FastAPI(title=settings.app_name)
+# CORS is configured from env so local dev and hosted deploys can use the same app.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origin_list,
@@ -50,6 +51,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# These directories are also exposed back to the frontend for clip playback and generated assets.
 settings.media_path.mkdir(parents=True, exist_ok=True)
 settings.sample_clips_path.mkdir(parents=True, exist_ok=True)
 app.mount("/media", StaticFiles(directory=settings.media_path), name="media")
@@ -57,6 +59,7 @@ app.mount("/samples", StaticFiles(directory=settings.sample_clips_path), name="s
 
 
 def now_iso() -> str:
+    # Storage records are kept as plain JSON, so ISO strings are the easiest timestamp format here.
     return datetime.now(UTC).isoformat()
 
 
@@ -65,6 +68,7 @@ def datetime_from_iso(value: str) -> datetime:
 
 
 def json_safe(value):
+    # The analyzers return numpy-heavy results, but the API/storage layer needs plain Python values.
     if isinstance(value, dict):
         return {key: json_safe(next_value) for key, next_value in value.items()}
     if isinstance(value, list):
@@ -81,6 +85,7 @@ def json_safe(value):
 
 
 def serialize_video(record: dict) -> VideoAssetResponse:
+    # The storage layer keeps raw dicts; serialize_* helpers shape them into typed API responses.
     return VideoAssetResponse(
         id=record["id"],
         name=record["name"],
@@ -109,6 +114,7 @@ def serialize_match(record: dict) -> MatchResponse:
 
 
 def serialize_incident(record: dict) -> IncidentResponse:
+    # Review output can contain numpy scalars/arrays, so normalize before building the response.
     safe_record = json_safe(record)
     return IncidentResponse(
         id=safe_record["id"],
@@ -141,6 +147,7 @@ def serialize_incident(record: dict) -> IncidentResponse:
 
 
 def sync_sample_videos() -> list[dict]:
+    # Rebuild the sample-clip index on startup so the demo clips always show up in the UI.
     records: list[dict] = []
     for file_path in sorted(settings.sample_clips_path.iterdir()):
         if not file_path.is_file() or file_path.suffix.lower() not in VIDEO_EXTENSIONS:
@@ -164,6 +171,7 @@ def sync_sample_videos() -> list[dict]:
             "poster_url": relative_media_url(poster_path, settings),
             "created_at": now_iso(),
         }
+        # ensure_video keeps the sample metadata stable if the app restarts multiple times.
         records.append(storage.ensure_video(record_id, record))
     return records
 
@@ -191,6 +199,7 @@ def demo_login(payload: DemoLoginRequest) -> DemoLoginResponse:
 
 @app.get("/sample-clips", response_model=list[VideoAssetResponse])
 def list_sample_clips() -> list[VideoAssetResponse]:
+    # Re-sync on read as well, so newly added demo clips appear without touching storage manually.
     return [serialize_video(record) for record in sync_sample_videos()]
 
 
@@ -199,6 +208,7 @@ def create_match(payload: MatchCreateRequest) -> MatchResponse:
     video = storage.get_record("videos", payload.video_id)
     if not video:
         raise HTTPException(status_code=404, detail="Video source not found.")
+    # Match records are small metadata wrappers around a chosen clip source.
     record = {
         "id": next_id("match"),
         "title": payload.title,
@@ -221,6 +231,7 @@ async def upload_video(file: UploadFile = File(...)) -> VideoAssetResponse:
 
     video_id = next_id("video")
     destination_dir = storage.media_dir("videos", video_id)
+    # Uploaded clips are saved into local storage and then treated like any other video source.
     file_path = save_upload_file(file, destination_dir)
     metadata = get_video_metadata(file_path)
     poster_path = create_poster(file_path, destination_dir / "poster.jpg")
@@ -247,12 +258,14 @@ def create_review_clip(payload: ReviewClipRequest) -> ReviewClipResponse:
     if not video:
         raise HTTPException(status_code=404, detail="Video source not found.")
     duration = float(video["duration"])
+    # Offside gets a slightly longer review window to make pass-frame locking easier.
     clip_length = 10.0 if payload.review_type == "offside" else 5.0
     clip_end = min(payload.review_timestamp, duration)
     clip_start = max(0.0, clip_end - clip_length)
     incident_id = next_id("incident")
     incident_dir = storage.media_dir("incidents", incident_id)
     clip_path = incident_dir / f"{payload.review_type}_clip.mp4"
+    # This generated clip becomes the working review lane in the UI.
     clip_meta = extract_clip(Path(video["path"]), clip_path, clip_start, clip_end)
 
     match_records = storage.list_records("matches")
@@ -287,6 +300,7 @@ def create_review_clip(payload: ReviewClipRequest) -> ReviewClipResponse:
         "created_at": now_iso(),
         "updated_at": now_iso(),
     }
+    # Incidents start light, then get progressively filled in by offside/goal analysis and notes.
     storage.upsert_record("incidents", incident_id, record)
     return ReviewClipResponse(
         incident_id=incident_id,
@@ -307,7 +321,9 @@ def review_offside_frame(payload: OffsideFrameReviewRequest) -> IncidentResponse
     if not incident:
         raise HTTPException(status_code=404, detail="Incident not found.")
     analyzer = get_analyzer(settings)
+    # Prefer the original source video here so the locked frame matches the operator timeline.
     source_path = Path(incident.get("source_video_path") or incident["clip_path"])
+    # The analyzer returns both the verdict and the assets needed for the detail page.
     result = analyzer.analyze_offside(source_path, storage.media_dir("incidents", incident["id"]), payload.frame_timestamp)
     incident.update(
         {
@@ -328,6 +344,7 @@ def review_offside_frame(payload: OffsideFrameReviewRequest) -> IncidentResponse
             "updated_at": now_iso(),
         }
     )
+    # Normalize again before writing; some nested diagnostics can still be numpy values.
     incident = json_safe(incident)
     storage.upsert_record("incidents", incident["id"], incident)
     return serialize_incident(incident)
@@ -345,6 +362,7 @@ def apply_offside_correction(incident_id: str, payload: OffsideCorrectionRequest
         raise HTTPException(status_code=400, detail="Lock a frame before applying manual correction.")
     analyzer = get_analyzer(settings)
     source_path = Path(incident.get("source_video_path") or incident["clip_path"])
+    # Manual correction re-runs the same frame with operator-selected attacker/defender context.
     result = analyzer.analyze_offside(
         source_path,
         storage.media_dir("incidents", incident["id"]),
@@ -387,6 +405,7 @@ def review_goal(payload: GoalReviewRequest) -> IncidentResponse:
     if not incident:
         raise HTTPException(status_code=404, detail="Incident not found.")
     analyzer = get_analyzer(settings)
+    # Goal review works from the generated short clip rather than a manually locked source frame.
     result = analyzer.analyze_goal(Path(incident["clip_path"]), storage.media_dir("incidents", incident["id"]))
     incident.update(
         {
@@ -413,6 +432,7 @@ def save_incident_note(incident_id: str, payload: IncidentNoteRequest) -> Incide
     incident = storage.get_record("incidents", incident_id)
     if not incident:
         raise HTTPException(status_code=404, detail="Incident not found.")
+    # Notes are stored directly on the incident so the archive stays self-contained.
     incident["note"] = payload.note
     incident["updated_at"] = now_iso()
     storage.upsert_record("incidents", incident_id, incident)
@@ -424,12 +444,14 @@ def delete_incident(incident_id: str) -> dict[str, str]:
     incident = storage.delete_record("incidents", incident_id)
     if not incident:
         raise HTTPException(status_code=404, detail="Incident not found.")
+    # Generated clips, snapshots, and diagrams live under the incident media directory.
     storage.delete_media_dir("incidents", incident_id)
     return {"id": incident_id, "status": "deleted"}
 
 
 @app.get("/incidents", response_model=list[IncidentResponse])
 def list_incidents() -> list[IncidentResponse]:
+    # Newest-first ordering keeps the operator archive aligned with recent review activity.
     incidents = sorted(storage.list_records("incidents"), key=lambda record: record["created_at"], reverse=True)
     return [serialize_incident(record) for record in incidents]
 
